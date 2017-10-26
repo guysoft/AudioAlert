@@ -27,6 +27,9 @@ class Feeder():
         self.negative_folder = os.path.join(folder, "negative")
 
         for class_folder in glob.glob(os.path.join(self.sounds_folder, "*")):
+            for wav_path in glob.glob(os.path.join(class_folder, "*.wav")):
+                sound = AudioSegment.from_file(wav_path)
+                out_sound = np.array(sound.get_array_of_samples())
 
             self.sounds = Parallel(n_jobs=4, backend="multiprocessing")(delayed(self.get_new_item)(wav_path)
                                                               for wav_path in glob.glob(os.path.join(class_folder, "*.wav")))
