@@ -56,7 +56,7 @@ class Feeder():
 
 
 
-        return merged_sounds, pure_sound, x
+        return np.array(merged_sounds), np.array(pure_sound), x
 
 class DataFeeder():
     def __init__(self, datafolder):
