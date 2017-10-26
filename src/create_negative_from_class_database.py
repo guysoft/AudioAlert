@@ -4,7 +4,9 @@ import xml.etree.ElementTree as ET
 import glob
 import os
 from pydub import AudioSegment
+from pydub.utils import make_chunks
 import shutil
+import numpy as np
 import random
 
 class_id_dict = {"2": "glass",
@@ -66,22 +68,31 @@ if __name__ == "__main__":
         tree = ET.parse(xml_path)
         xml_root = tree.getroot()
 
+        sound_array = np.array(sound.get_array_of_samples())
+        mask = np.ones(len(sound_array), dtype=bool)
+
         for event in xml_root.find("events"):
             start_second = float(event.find("STARTSECOND").text)
             end_second = float(event.find("ENDSECOND").text)
 
-            start = start_second + random.uniform(-0.5, 0.5)
-            end = start + 1
+            mask[int(start_second* sound.frame_rate):int( end_second * sound.frame_rate)] = False
 
-            class_name = class_id_dict[event.find("CLASS_ID").text]
+        new_array = sound_array[mask]
 
-            print(count)
+        sound_clean = AudioSegment(
+            new_array.tobytes(),
+            frame_rate=sound.frame_rate,
+            sample_width=new_array.dtype.itemsize,
+            channels=1
+        )
 
-            even_cut_from_track = sound[start* 1000:end* 1000]
+        chunks = make_chunks(sound_clean, 1 * 1000)
 
+        class_name = "negative"
+        for chunk in chunks:
             out_path = os.path.join(out_folder, class_name, os.path.basename(wav_path) + str(count) + ".wav")
             ensure_dir(os.path.dirname(out_path))
-            even_cut_from_track.export(out_path, format="wav")
+            chunk.export(out_path, format="wav")
             count += 1
 
     print("done")

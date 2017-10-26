@@ -10,12 +10,23 @@ class Feeder():
     def __init__(self, folder):
         self.sounds_folder = folder
         self.sounds = []
-        self.classes_set = ['glass', 'gunshot', 'scream']
+        self.classes_set = ['glass', 'gunshot', 'scream','negative']
+
+        self.negative_folder = os.path.join(folder, "negative")
+
         for class_folder in glob.glob(os.path.join(self.sounds_folder, "*")):
             for wav_path in glob.glob(os.path.join(class_folder, "*.wav")):
                 sound = AudioSegment.from_file(wav_path)
                 out_sound = np.array(sound.get_array_of_samples())
-                item = [out_sound, out_sound, [os.path.basename(class_folder)]]
+
+                negative_file = os.path.join(self.negative_folder, random.choice(os.listdir(self.negative_folder)))
+                negative_sound = AudioSegment.from_file(negative_file)[:] - (60 - 60* random.uniform(0.1, 1))
+
+                merge_sound = AudioSegment.from_file(wav_path).overlay(negative_sound)
+
+
+
+                item = [merge_sound, out_sound, [os.path.basename(class_folder)]]
                 self.sounds.append(item)
 
     def next(self, batch_size, window_lengh):
@@ -25,12 +36,14 @@ class Feeder():
         cls = []
 
         for i in range(batch_size):
-            merged_sounds.append(self.sounds[i][0])
-            pure_sound.append(self.sounds[i][1])
-            cls.append(self.sounds[i][2])
+            merged_sounds.append(i[0])
+            pure_sound.append(i[1])
+            cls.append(i[2])
         x = np.zeros((batch_size, 3))
         for n in range(batch_size):
             x[n, self.classes_set.index(cls[n][0])] = 1
+
+
 
         return merged_sounds, pure_sound, x
 
@@ -51,6 +64,13 @@ class DataFeeder():
 
 
 if __name__ == "__main__":
-    a = Feeder()
+    import argparse
+    parser = argparse.ArgumentParser(add_help=True,
+                                     description="Testing data feeder")
+
+    parser.add_argument('in_folder', type=str, help='input folder)')
+
+    args = parser.parse_args()
+    a = Feeder(args.in_folder)
 
 
