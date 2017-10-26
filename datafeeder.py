@@ -46,7 +46,7 @@ class Feeder():
 
 
             merged_sounds.append(merge_sound)
-            pure_sound.append(sound)
+            pure_sound.append( np.array(sound.get_array_of_samples()))
 
 
             cls.append(self.sounds[i][2])
@@ -84,6 +84,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     a = Feeder(args.in_folder)
 
-    a.next( 2, 23)
+    print(a.next( 2, 23))
 
 
