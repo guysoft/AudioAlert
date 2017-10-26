@@ -1,5 +1,11 @@
 from datetime import datetime
 import tensorflow as tf
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
+
+DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+
 from neural_model import AudioNet_1D
 from datafeeder import DataFeeder
 import os
@@ -12,6 +18,23 @@ learning_rate = 1E-4
 sample_rate = 30000
 filewriter_path = r"\DataHack\nets\TB"
 checkpoint_path = r"\DataHack\nets"
+sample_rate = 20000
+
+def ensure_dir(d):
+    if not os.path.exists(d):
+        os.makedirs(d)
+
+
+filewriter_path = os.path.join(DIR, "DataHack", "nets", "TB")
+checkpoint_path = os.path.join(DIR, "DataHack", "nets")
+
+checkpoint_path = os.path.join(DIR, "DataHack", "nets")
+train_path = os.path.join(DIR, "..", "dataset", "train")
+
+ensure_dir(filewriter_path)
+ensure_dir(checkpoint_path)
+ensure_dir(train_path)
+
 
 num_epochs = 100
 batch_size = 50
@@ -87,9 +110,9 @@ writer = tf.summary.FileWriter(filewriter_path)
 saver = tf.train.Saver()
 
 # Initalize the data generator seperately for the training and validation set
-train_generator = DataFeeder()
+train_generator = DataFeeder(train_path)
 print('val')
-val_generator = DataFeeder()
+val_generator = DataFeeder(train_path)
 
 # Start Tensorflow session
 gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
@@ -138,7 +161,7 @@ with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
         print("{} Saving checkpoint of model...".format(datetime.now()))
 
         # save checkpoint of the model
-        checkpoint_name = os.path.join(checkpoint_path, 'model_epoch_2_' + str(epoch + 1) + '.ckpt')
+        checkpoint_name = os.path.join(checkpoint_path, 'model_epoch_' + str(epoch + 1) + '.ckpt')
         save_path = saver.save(sess, checkpoint_name)
 
         print("{} Model checkpoint saved at {}".format(datetime.now(), checkpoint_name))
