@@ -3,8 +3,21 @@ import os
 import glob
 from pydub import AudioSegment
 import random
+from joblib import Parallel, delayed
 
 class Feeder():
+
+    def get_new_item(self, wav_path):
+        sound = AudioSegment.from_file(wav_path)
+        out_sound = np.array(sound.get_array_of_samples())
+
+        negative_file = os.path.join(self.negative_folder, random.choice(os.listdir(self.negative_folder)))
+        negative_sound = AudioSegment.from_file(negative_file)[:] - (60 - 60 * random.uniform(0.1, 1))
+
+        merge_sound = AudioSegment.from_file(wav_path).overlay(negative_sound)
+
+        item = [merge_sound, out_sound, [os.path.basename(os.path.dirname(wav_path))]]
+        return item
 
     def __init__(self, folder):
         self.sounds_folder = folder
@@ -13,19 +26,13 @@ class Feeder():
         self.negative_folder = os.path.join(folder, "negative")
 
         for class_folder in glob.glob(os.path.join(self.sounds_folder, "*")):
-            for wav_path in glob.glob(os.path.join(class_folder, "*.wav")):
-                sound = AudioSegment.from_file(wav_path)
-                out_sound = np.array(sound.get_array_of_samples())
 
-                negative_file = os.path.join(self.negative_folder, random.choice(os.listdir(self.negative_folder)))
-                negative_sound = AudioSegment.from_file(negative_file)[:] - (60 - 60* random.uniform(0.1, 1))
+            self.sounds = Parallel(n_jobs=4, backend="multiprocessing")(delayed(self.get_new_item)(wav_path)
+                                                              for wav_path in glob.glob(os.path.join(class_folder, "*.wav")))
 
-                merge_sound = AudioSegment.from_file(wav_path).overlay(negative_sound)
-
-
-
-                item = [merge_sound, out_sound, [os.path.basename(class_folder)]]
-                self.sounds.append(item)
+            # old code without joblib
+            # for wav_path in glob.glob(os.path.join(class_folder, "*.wav")):
+            #     self.sounds.append(item)
 
     def next(self, batch_size, window_lengh):
         random.shuffle(self.sounds)
