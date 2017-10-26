@@ -15,6 +15,7 @@ model = AudioNet_1D(30000)
 beta = 1E-4
 gamma = 1E-1
 learning_rate = 1E-4
+
 sample_rate = 30000
 
 def ensure_dir(d):
