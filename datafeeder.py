@@ -11,10 +11,10 @@ class Feeder():
         sound = AudioSegment.from_file(wav_path)
         out_sound = np.array(sound.get_array_of_samples())
 
-        negative_file = os.path.join(self.negative_folder, random.choice(os.listdir(self.negative_folder)))
-        negative_sound = AudioSegment.from_file(negative_file)[:] - (60 - 60 * random.uniform(0.1, 1))
-
-        merge_sound = AudioSegment.from_file(wav_path).overlay(negative_sound)
+        # negative_file = os.path.join(self.negative_folder, random.choice(os.listdir(self.negative_folder)))
+        # negative_sound = AudioSegment.from_file(negative_file)[:] - (60 - 60 * random.uniform(0.1, 1))
+        # merge_sound =  np.array(AudioSegment.from_file(wav_path).overlay(negative_sound).get_array_of_samples())
+        merge_sound = out_sound
 
         item = [merge_sound, out_sound, [os.path.basename(os.path.dirname(wav_path))]]
         return item
@@ -31,7 +31,7 @@ class Feeder():
                 sound = AudioSegment.from_file(wav_path)
                 out_sound = np.array(sound.get_array_of_samples())
 
-            self.sounds = Parallel(n_jobs=4, backend="multiprocessing")(delayed(self.get_new_item)(wav_path)
+            self.sounds = Parallel(n_jobs=4, backend="threading")(delayed(self.get_new_item)(wav_path)
                                                               for wav_path in glob.glob(os.path.join(class_folder, "*.wav")))
 
             # old code without joblib
