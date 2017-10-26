@@ -36,8 +36,8 @@ class Feeder():
         cls = []
 
         for i in range(batch_size):
-            wav_path = i[0][0]
-            negative_file = i[0][1]
+            wav_path = self.sounds[i][0][0]
+            negative_file = self.sounds[i][0][1]
 
             sound = AudioSegment.from_file(wav_path)
 
@@ -49,7 +49,7 @@ class Feeder():
             pure_sound.append(sound)
 
 
-            cls.append(i[2])
+            cls.append(self.sounds[i][2])
         x = np.zeros((batch_size, len(self.classes_set)))
         for n in range(batch_size):
             x[n, self.classes_set.index(cls[n][0])] = 1
@@ -83,5 +83,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     a = Feeder(args.in_folder)
+
+    a.next( 2, 23)
 
 
