@@ -8,15 +8,8 @@ from joblib import Parallel, delayed
 class Feeder():
 
     def get_new_item(self, wav_path):
-        sound = AudioSegment.from_file(wav_path)
-        out_sound = np.array(sound.get_array_of_samples())
-
-        # negative_file = os.path.join(self.negative_folder, random.choice(os.listdir(self.negative_folder)))
-        # negative_sound = AudioSegment.from_file(negative_file)[:] - (60 - 60 * random.uniform(0.1, 1))
-        # merge_sound =  np.array(AudioSegment.from_file(wav_path).overlay(negative_sound).get_array_of_samples())
-        merge_sound = out_sound
-
-        item = [merge_sound, out_sound, [os.path.basename(os.path.dirname(wav_path))]]
+        negative_file = os.path.join(self.negative_folder, random.choice(self.negative_folder_list))
+        item = [[wav_path, negative_file], wav_path, [os.path.basename(os.path.dirname(wav_path))]]
         return item
 
     def __init__(self, folder):
@@ -25,14 +18,12 @@ class Feeder():
         self.sounds = []
 
         self.negative_folder = os.path.join(folder, "negative")
+        self.negative_folder_list = os.listdir(self.negative_folder)
 
         for class_folder in glob.glob(os.path.join(self.sounds_folder, "*")):
-            for wav_path in glob.glob(os.path.join(class_folder, "*.wav")):
-                sound = AudioSegment.from_file(wav_path)
-                out_sound = np.array(sound.get_array_of_samples())
-
-            self.sounds = Parallel(n_jobs=4, backend="threading")(delayed(self.get_new_item)(wav_path)
-                                                              for wav_path in glob.glob(os.path.join(class_folder, "*.wav")))
+            print(class_folder)
+            self.sounds = Parallel(n_jobs=16, backend="threading")(delayed(self.get_new_item)(wav_path)
+                                                          for wav_path in glob.glob(os.path.join(class_folder, "*.wav")))
 
             # old code without joblib
             # for wav_path in glob.glob(os.path.join(class_folder, "*.wav")):
@@ -45,9 +36,19 @@ class Feeder():
         cls = []
 
         for i in range(batch_size):
+            wav_path = i[0][0]
+            negative_file = i[0][1]
 
-            merged_sounds.append(i[0])
-            pure_sound.append(i[1])
+            sound = AudioSegment.from_file(wav_path)
+
+            negative_sound = AudioSegment.from_file(negative_file)[:] - (60 - 60 * random.uniform(0.1, 1))
+            merge_sound = np.array(sound.overlay(negative_sound).get_array_of_samples())
+
+
+            merged_sounds.append(merge_sound)
+            pure_sound.append(sound)
+
+
             cls.append(i[2])
         x = np.zeros((batch_size, len(self.classes_set)))
         for n in range(batch_size):
