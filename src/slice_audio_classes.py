@@ -5,6 +5,7 @@ import glob
 import os
 from pydub import AudioSegment
 import shutil
+import random
 
 class_id_dict = {"2": "glass",
                  "3": "gunshot",
@@ -68,11 +69,15 @@ if __name__ == "__main__":
         for event in xml_root.find("events"):
             start_second = float(event.find("STARTSECOND").text)
             end_second = float(event.find("ENDSECOND").text)
+
+            start = start_second + random.uniform(-0.5, 0.5)
+            end = start + 1
+
             class_name = class_id_dict[event.find("CLASS_ID").text]
 
             print(count)
 
-            even_cut_from_track = sound[start_second* 1000:end_second* 1000]
+            even_cut_from_track = sound[start* 1000:end* 1000]
 
             out_path = os.path.join(out_folder, class_name, os.path.basename(wav_path) + str(count) + ".wav")
             ensure_dir(os.path.dirname(out_path))
