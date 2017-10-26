@@ -9,7 +9,7 @@ class Feeder():
 
     def get_new_item(self, wav_path):
         negative_file = os.path.join(self.negative_folder, random.choice(self.negative_folder_list))
-        item = [[wav_path, negative_file], wav_path, [os.path.basename(os.path.dirname(wav_path))]]
+        item = [negative_file, wav_path, [os.path.basename(os.path.dirname(wav_path))]]
         return item
 
     def __init__(self, folder):
@@ -35,9 +35,9 @@ class Feeder():
         pure_sound = []
         cls = []
 
-        for i in range(batch_size):
-            wav_path = self.sounds[i][0][0]
-            negative_file = self.sounds[i][0][1]
+        for i in range(min(batch_size, len(self.sounds))):
+            wav_path = self.sounds[i][1]
+            negative_file = self.sounds[i][0]
 
             sound = AudioSegment.from_file(wav_path)
 
