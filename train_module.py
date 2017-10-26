@@ -28,6 +28,7 @@ checkpoint_path = os.path.join(DIR, "DataHack", "nets")
 
 checkpoint_path = os.path.join(DIR, "DataHack", "nets")
 train_path = os.path.join(DIR, "..", "dataset", "train")
+val_path = os.path.join(DIR, "..", "dataset", "val")
 
 ensure_dir(filewriter_path)
 ensure_dir(checkpoint_path)
@@ -110,7 +111,7 @@ saver = tf.train.Saver()
 # Initalize the data generator seperately for the training and validation set
 train_generator = DataFeeder(train_path)
 print('val')
-val_generator = DataFeeder(train_path)
+val_generator = DataFeeder(val_path)
 
 # Start Tensorflow session
 # gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.7)
