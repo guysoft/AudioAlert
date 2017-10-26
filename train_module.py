@@ -1,8 +1,14 @@
 from datetime import datetime
 import tensorflow as tf
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
+
+DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+
 from neural_model import AudioNet_1D
 from datafeeder import DataFeeder
-import os
+
 
 # Initialize model
 model = AudioNet_1D(20000)
@@ -10,8 +16,22 @@ beta = 1E-4
 gamma = 1E-1
 learning_rate = 1E-4
 sample_rate = 20000
-filewriter_path = r"\DataHack\nets\TB"
-checkpoint_path = r"\DataHack\nets"
+
+def ensure_dir(d):
+    if not os.path.exists(d):
+        os.makedirs(d)
+
+
+filewriter_path = os.path.join(DIR, "DataHack", "nets", "TB")
+checkpoint_path = os.path.join(DIR, "DataHack", "nets")
+
+checkpoint_path = os.path.join(DIR, "DataHack", "nets")
+train_path = os.path.join(DIR, "..", "dataset", "train")
+
+ensure_dir(filewriter_path)
+ensure_dir(checkpoint_path)
+ensure_dir(train_path)
+
 
 num_epochs = 100
 batch_size = 10
@@ -87,9 +107,9 @@ writer = tf.summary.FileWriter(filewriter_path)
 saver = tf.train.Saver()
 
 # Initalize the data generator seperately for the training and validation set
-train_generator = DataFeeder()
+train_generator = DataFeeder(train_path)
 print('val')
-val_generator = DataFeeder()
+val_generator = DataFeeder(train_path)
 
 # Start Tensorflow session
 gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
