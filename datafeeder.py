@@ -20,13 +20,17 @@ class Feeder():
 
     def next(self, batch_size, window_lengh):
         random.shuffle(self.sounds)
-        return_value = []
+        merged_sounds = []
+        pure_sound = []
+        cls = []
 
         for i in range(batch_size):
-            return_value.append(i)
+            merged_sounds.append(i[0])
+            pure_sound.append(i[1])
+            cls.append(i[2])
 
 
-        return return_value
+        return merged_sounds, pure_sound, cls
 
 class DataFeeder():
     def __init__(self, datafolder):
