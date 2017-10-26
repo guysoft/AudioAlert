@@ -12,7 +12,7 @@ class Feeder():
         self.sounds = []
 
         for class_folder in glob.glob(os.path.join(self.sounds_folder, "*")):
-            for wav_path in glob.glob(class_folder, "*.wav"):
+            for wav_path in glob.glob(os.path.join(class_folder, "*.wav")):
                 sound = AudioSegment.from_file(wav_path)
                 out_sound = np.array(sound.get_array_of_samples())
                 item = [out_sound, out_sound, [os.path.basename(class_folder)]]
@@ -34,7 +34,7 @@ class DataFeeder():
         self.feeder = Feeder(datafolder)
 
     def generate_next_set(self, batch_size, window_lengh):
-        return self.feeder.next()
+        return self.feeder.next(batch_size, window_lengh)
 
     def generate_next_set_dummy(self, batch_size, window_lenght):
         merged_sounds = np.zeros((batch_size, window_lenght, 1))

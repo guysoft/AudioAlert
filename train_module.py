@@ -16,9 +16,6 @@ beta = 1E-4
 gamma = 1E-1
 learning_rate = 1E-4
 sample_rate = 30000
-filewriter_path = r"\DataHack\nets\TB"
-checkpoint_path = r"\DataHack\nets"
-sample_rate = 20000
 
 def ensure_dir(d):
     if not os.path.exists(d):
