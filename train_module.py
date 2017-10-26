@@ -5,21 +5,21 @@ from datafeeder import DataFeeder
 import os
 
 # Initialize model
-model = AudioNet_1D(20000)
+model = AudioNet_1D(30000)
 beta = 1E-4
 gamma = 1E-1
 learning_rate = 1E-4
-sample_rate = 20000
+sample_rate = 30000
 filewriter_path = r"\DataHack\nets\TB"
 checkpoint_path = r"\DataHack\nets"
 
 num_epochs = 100
-batch_size = 10
+batch_size = 50
 window_size = 1 * sample_rate
 # Get the number of training/validation steps per epoch
 val_batches_per_epoch = 50
 train_batches_per_epoch = 50
-display_step = 1
+display_step = 20
 # List of trainable variables of the layers we want to train
 var_list = tf.trainable_variables()
 # #L2 norm
@@ -138,7 +138,7 @@ with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
         print("{} Saving checkpoint of model...".format(datetime.now()))
 
         # save checkpoint of the model
-        checkpoint_name = os.path.join(checkpoint_path, 'model_epoch_' + str(epoch + 1) + '.ckpt')
+        checkpoint_name = os.path.join(checkpoint_path, 'model_epoch_2_' + str(epoch + 1) + '.ckpt')
         save_path = saver.save(sess, checkpoint_name)
 
         print("{} Model checkpoint saved at {}".format(datetime.now(), checkpoint_name))

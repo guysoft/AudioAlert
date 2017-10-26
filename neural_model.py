@@ -11,30 +11,32 @@ class AudioNet_1D:
 
         # Start building CNN layers
         # First general layers
-        net = AudioNet_1D.conv(self.in_sound, 49, 64, 1, "conv1", regularizer=self.regularizer)
+        net = AudioNet_1D.conv(self.in_sound, 49, 16, 2, "conv1", regularizer=self.regularizer)
         # Resnet Blocks
         with tf.name_scope("BlockA"):
             for n in range(5):
-                net = AudioNet_1D.resblock(net, 9, 64, 1, "BlockA_" + str(n), regularizer=self.regularizer)
-        net = AudioNet_1D.conv(net, 9, 128, 1, "conv2", regularizer=self.regularizer)
+                net = AudioNet_1D.resblock(net, 9, 16, 1, "BlockA_" + str(n), regularizer=self.regularizer)
+        net = AudioNet_1D.conv(net, 9, 32, 2, "conv2", regularizer=self.regularizer)
         with tf.name_scope("BlockB"):
             for n in range(5):
-                net = AudioNet_1D.resblock(net, 9, 128, 1, "BlockB_" + str(n), regularizer=self.regularizer)
-        net = AudioNet_1D.conv(net, 9, 256, 1, "conv3", regularizer=self.regularizer)
+                net = AudioNet_1D.resblock(net, 9, 32, 1, "BlockB_" + str(n), regularizer=self.regularizer)
+        net = AudioNet_1D.conv(net, 9, 64, 2, "conv3", regularizer=self.regularizer)
         with tf.name_scope("BlockC"):
-            for n in range(5):
-                net = AudioNet_1D.resblock(net, 9, 256, 1, "BlockC_" + str(n), regularizer=self.regularizer)
+            for n in range(20):
+                net = AudioNet_1D.resblock(net, 9, 64, 1, "BlockC_" + str(n), regularizer=self.regularizer)
         # Fully Connected logic classifier head
         with tf.name_scope("cls_block"):
-            net_cls = AudioNet_1D.conv(net, 9, 128, 1, "cls_layer1", regularizer=self.regularizer)
-            net_cls = AudioNet_1D.conv(net_cls, 9, 64, 1, "cls_layer2", regularizer=self.regularizer)
+            net_cls = AudioNet_1D.conv(net, 9, 64, 1, "cls_layer1", regularizer=self.regularizer)
+            net_cls = AudioNet_1D.conv(net_cls, 9, 32, 1, "cls_layer2", regularizer=self.regularizer)
             net_cls = AudioNet_1D.conv(net_cls, 50, 2, 1, "cls_layer3", regularizer=self.regularizer)
             net_cls = tf.reduce_max(net_cls, 1)
         # Extraction head
         with tf.name_scope("splt_block"):
-            net_splt_1 = AudioNet_1D.conv(net, 9, 128, 1, "cls_layer1", regularizer=self.regularizer)
-            net_splt_2 = AudioNet_1D.conv(net_splt_1, 9, 64, 1, "cls_layer2", regularizer=self.regularizer)
-            net_splt_3 = AudioNet_1D.conv(net_splt_2, 9, 32, 1, "cls_layer3", regularizer=self.regularizer)
+            net = AudioNet_1D.conv(net, 9, 32, 2, "conv3", regularizer=self.regularizer)
+            net = tf.reshape(tf.image.resize_nearest_neighbor(tf.expand_dims(net, 3), (lenght, 32)), (-1, lenght, 32))
+            net_splt_1 = AudioNet_1D.conv(net, 9, 32, 1, "cls_layer1", regularizer=self.regularizer)
+            net_splt_2 = AudioNet_1D.conv(net_splt_1, 9, 16, 1, "cls_layer2", regularizer=self.regularizer)
+            net_splt_3 = AudioNet_1D.conv(net_splt_2, 9, 8, 1, "cls_layer3", regularizer=self.regularizer)
             # net_splt =  tf.concat(values=[net_splt_1,net_splt_2,net_splt_3, net], axis=1)
             net_splt = AudioNet_1D.conv(net_splt_3, 9, 1, 1, "clean_out", regularizer=self.regularizer, is_relu=False)
 
