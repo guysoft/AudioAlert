@@ -11,7 +11,7 @@ from datafeeder import DataFeeder
 import os
 
 # Initialize model
-model = AudioNet_1D(32000, 3)
+model = AudioNet_1D(32000, 4)
 beta = 1E-8
 gamma = 1E-10
 learning_rate = 1E-5
@@ -29,6 +29,7 @@ checkpoint_path = os.path.join(DIR, "DataHack", "nets")
 checkpoint_path = os.path.join(DIR, "DataHack", "nets")
 train_path = os.path.join(DIR, "..", "dataset", "train")
 val_path = os.path.join(DIR, "..", "dataset", "val")
+train_path = os.path.join(DIR, "..", "dataset", "val")
 
 ensure_dir(filewriter_path)
 ensure_dir(checkpoint_path)
@@ -36,7 +37,7 @@ ensure_dir(train_path)
 
 
 num_epochs = 100
-batch_size = 200
+batch_size = 5
 window_size = 1 * sample_rate
 # Get the number of training/validation steps per epoch
 val_batches_per_epoch = 50
