@@ -22,10 +22,14 @@ class Feeder():
     def __init__(self, folder):
         self.sounds_folder = folder
         self.sounds = []
+        self.classes_set = ['glass', 'gunshot', 'scream','negative']
 
         self.negative_folder = os.path.join(folder, "negative")
 
         for class_folder in glob.glob(os.path.join(self.sounds_folder, "*")):
+            for wav_path in glob.glob(os.path.join(class_folder, "*.wav")):
+                sound = AudioSegment.from_file(wav_path)
+                out_sound = np.array(sound.get_array_of_samples())
 
             self.sounds = Parallel(n_jobs=4, backend="multiprocessing")(delayed(self.get_new_item)(wav_path)
                                                               for wav_path in glob.glob(os.path.join(class_folder, "*.wav")))
@@ -45,9 +49,13 @@ class Feeder():
             merged_sounds.append(i[0])
             pure_sound.append(i[1])
             cls.append(i[2])
+        x = np.zeros((batch_size, 3))
+        for n in range(batch_size):
+            x[n, self.classes_set.index(cls[n][0])] = 1
 
 
-        return merged_sounds, pure_sound, cls
+
+        return merged_sounds, pure_sound, x
 
 class DataFeeder():
     def __init__(self, datafolder):

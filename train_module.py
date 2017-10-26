@@ -11,12 +11,12 @@ from datafeeder import DataFeeder
 import os
 
 # Initialize model
-model = AudioNet_1D(30000)
-beta = 1E-4
-gamma = 1E-1
-learning_rate = 1E-4
+model = AudioNet_1D(32000, 3)
+beta = 1E-8
+gamma = 1E-10
+learning_rate = 1E-5
 
-sample_rate = 30000
+sample_rate = 32000
 
 def ensure_dir(d):
     if not os.path.exists(d):
@@ -35,7 +35,7 @@ ensure_dir(train_path)
 
 
 num_epochs = 100
-batch_size = 50
+batch_size = 200
 window_size = 1 * sample_rate
 # Get the number of training/validation steps per epoch
 val_batches_per_epoch = 50
@@ -53,7 +53,7 @@ keep_prob = model.keep_prob
 dropout_rate = 0.5
 # Op for calculating the loss
 with tf.name_scope("loss"):
-    clean_loss = tf.nn.l2_loss(model.in_sound_target - model.net_splt)
+    clean_loss = tf.nn.l2_loss(model.in_sound_target - model.net_splt) / window_size
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logit, labels=y)) + beta * sum(
         reg_losses) + gamma * clean_loss
 
@@ -113,8 +113,9 @@ print('val')
 val_generator = DataFeeder(train_path)
 
 # Start Tensorflow session
-gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
-with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
+# gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.7)
+# with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
+with tf.Session() as sess:
     # Initialize all variables
     sess.run(tf.global_variables_initializer())
     # Add the model graph to TensorBoard
@@ -159,7 +160,7 @@ with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
         print("{} Saving checkpoint of model...".format(datetime.now()))
 
         # save checkpoint of the model
-        checkpoint_name = os.path.join(checkpoint_path, 'model_epoch_' + str(epoch + 1) + '.ckpt')
+        checkpoint_name = os.path.join(checkpoint_path, 'fix_epoch_' + str(epoch + 1) + '.ckpt')
         save_path = saver.save(sess, checkpoint_name)
 
         print("{} Model checkpoint saved at {}".format(datetime.now(), checkpoint_name))
