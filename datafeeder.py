@@ -6,7 +6,6 @@ import random
 from joblib import Parallel, delayed
 
 class Feeder():
-    self.classes_set = ['glass', 'gunshot', 'scream', 'negative']
 
     def get_new_item(self, wav_path):
         sound = AudioSegment.from_file(wav_path)
@@ -21,6 +20,7 @@ class Feeder():
         return item
 
     def __init__(self, folder):
+        self.classes_set = ['glass', 'gunshot', 'scream', 'negative']
         self.sounds_folder = folder
         self.sounds = []
 
