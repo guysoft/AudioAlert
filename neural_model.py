@@ -28,7 +28,8 @@ class AudioNet_1D:
         with tf.name_scope("cls_block"):
             net_cls = AudioNet_1D.conv(net, 9, 128, 1, "cls_layer1", regularizer=self.regularizer)
             net_cls = AudioNet_1D.conv(net_cls, 9, 64, 1, "cls_layer2", regularizer=self.regularizer)
-            net_cls = AudioNet_1D.conv(net_cls, 1000, 2, 1, "cls_layer3", regularizer=self.regularizer)
+            net_cls = AudioNet_1D.conv(net_cls, 50, 2, 1, "cls_layer3", regularizer=self.regularizer)
+            net_cls = tf.reduce_max(net_cls, 1)
         # Extraction head
         with tf.name_scope("splt_block"):
             net_splt_1 = AudioNet_1D.conv(net, 9, 128, 1, "cls_layer1", regularizer=self.regularizer)

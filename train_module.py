@@ -2,6 +2,7 @@ from datetime import datetime
 import tensorflow as tf
 from neural_model import AudioNet_1D
 from datafeeder import DataFeeder
+import os
 
 # Initialize model
 model = AudioNet_1D(20000)
@@ -9,14 +10,16 @@ beta = 1E-4
 gamma = 1E-1
 learning_rate = 1E-4
 sample_rate = 20000
-filewriter_path = ""
+filewriter_path = r"\DataHack\nets\TB"
+checkpoint_path = r"\DataHack\nets"
+
 num_epochs = 100
-batch_size = 100
+batch_size = 10
 window_size = 1 * sample_rate
 # Get the number of training/validation steps per epoch
 val_batches_per_epoch = 50
 train_batches_per_epoch = 50
-display_step = 5
+display_step = 1
 # List of trainable variables of the layers we want to train
 var_list = tf.trainable_variables()
 # #L2 norm
@@ -62,12 +65,17 @@ with tf.name_scope("accuracy"):
 # Add the accuracy to the summary
 tf.summary.scalar('accuracy', accuracy)
 tf.summary.scalar('clean_loss', clean_loss)
+
 au_train_summery = tf.summary.audio("train", model.in_sound, sample_rate, 3)
 au_clean_summery = tf.summary.audio("clean", model.in_sound, sample_rate, 3)
 au_pred_summery = tf.summary.audio("predicted", model.net_splt, sample_rate, 3)
 
 # Merge all summaries together
 merged_summary = tf.summary.merge_all()
+
+accuracy_train = tf.summary.scalar('accuracy_train', accuracy)
+clean_loss_train = tf.summary.scalar('clean_loss_train', clean_loss)
+merged_summary_train = tf.summary.merge([accuracy_train, clean_loss_train])
 
 # Add the accuracy to the summary
 val_acc = tf.summary.scalar('Validation Accuracy', accuracy)
@@ -105,23 +113,24 @@ with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
         while step < train_batches_per_epoch:
 
             # Get a batch of images and labels
-            batch_xs, batch_ys, batch_clean = train_generator.generate_next_set(batch_size, window_size)
+            batch_xs, batch_clean, batch_ys = train_generator.generate_next_set(batch_size, window_size)
             # And run the training op
-            sess.run(train_op, feed_dict={x: batch_xs,
-                                          y: batch_ys,
-                                          w: batch_clean,
-                                          keep_prob: dropout_rate
-                                          })
+            out, train_summ = sess.run([train_op, merged_summary_train], feed_dict={x: batch_xs,
+                                                                                    y: batch_ys,
+                                                                                    w: batch_clean,
+                                                                                    keep_prob: dropout_rate
+                                                                                    })
+            writer.add_summary(train_summ, epoch * train_batches_per_epoch + step)
 
             # Generate summary with the current batch of data and write to file
             if step % display_step == 0:
-                batch_tx, batch_ty, batch_tclean = val_generator.generate_next_set(batch_size, window_size)
-                sess.run(merged_summary, feed_dict={x: batch_tx,
+                batch_tx, batch_tclean, batch_ty = val_generator.generate_next_set(batch_size, window_size)
+                merged_summary_res = sess.run(merged_summary, feed_dict={x: batch_tx,
                                                     y: batch_ty,
                                                     w: batch_tclean,
                                                     keep_prob: dropout_rate
                                                     })
-                writer.add_summary(merged_summary, epoch * train_batches_per_epoch + step)
+                writer.add_summary(merged_summary_res, epoch * train_batches_per_epoch + step)
                 test_count += 1
 
             step += 1
@@ -129,7 +138,7 @@ with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
         print("{} Saving checkpoint of model...".format(datetime.now()))
 
         # save checkpoint of the model
-        checkpoint_name = os.path.join(checkpoint_path, 'model_epoch_' + tag_name + '_' + str(epoch + 1) + '.ckpt')
+        checkpoint_name = os.path.join(checkpoint_path, 'model_epoch_' + str(epoch + 1) + '.ckpt')
         save_path = saver.save(sess, checkpoint_name)
 
         print("{} Model checkpoint saved at {}".format(datetime.now(), checkpoint_name))
