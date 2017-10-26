@@ -6,8 +6,6 @@ import random
 
 class Feeder():
 
-    def get_class(self, folder):
-
 
     def __init__(self, folder):
         self.sounds_folder = folder
@@ -15,9 +13,10 @@ class Feeder():
 
         for class_folder in glob.glob(os.path.join(self.sounds_folder, "*")):
             for wav_path in glob.glob(class_folder, "*.wav"):
-            sound = AudioSegment.from_file(wav_path)
-            item = [sound.get_array_of_samples(), sound.get_array_of_samples(), [os.path.basename(class_folder)]]
-            self.sounds.append(item)
+                sound = AudioSegment.from_file(wav_path)
+                out_sound = np.array(sound.get_array_of_samples())
+                item = [out_sound, out_sound, [os.path.basename(class_folder)]]
+                self.sounds.append(item)
 
     def next(self, batch_size, window_lengh):
         random.shuffle(self.sounds)
