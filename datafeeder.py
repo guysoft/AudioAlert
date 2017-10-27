@@ -19,11 +19,11 @@ class Feeder():
 
         self.negative_folder = os.path.join(folder, "negative")
         self.negative_folder_list = os.listdir(self.negative_folder)
-
+        self.sounds = []
         for class_folder in glob.glob(os.path.join(self.sounds_folder, "*")):
             print(class_folder)
-            self.sounds = Parallel(n_jobs=16, backend="threading")(delayed(self.get_new_item)(wav_path)
-                                                          for wav_path in glob.glob(os.path.join(class_folder, "*.wav")))
+            self.sounds += Parallel(n_jobs=16, backend="threading")(delayed(self.get_new_item)(wav_path)
+                                                                    for wav_path in glob.glob(os.path.join(class_folder, "*.wav")))
 
             # old code without joblib
             # for wav_path in glob.glob(os.path.join(class_folder, "*.wav")):
@@ -42,11 +42,24 @@ class Feeder():
             sound = AudioSegment.from_file(wav_path)
 
             negative_sound = AudioSegment.from_file(negative_file)[:] - (60 - 60 * random.uniform(0.1, 1))
-            merge_sound = np.array(sound.overlay(negative_sound).get_array_of_samples())
+            scale = 1 + random.uniform(-0.3, 0.3)
+            merge_sound = scale * np.array(
+                sound.overlay(negative_sound, times=1 + random.uniform(-0.3, 0.3)).get_array_of_samples())
 
+            tmp = np.zeros(32000)
+            if merge_sound.shape[0] < 32000:
+                tmp[0:merge_sound.shape[0]] = merge_sound
+            else:
+                tmp = merge_sound[:32000]
+            merged_sounds.append(tmp.tolist())
 
-            merged_sounds.append(merge_sound)
-            pure_sound.append( np.array(sound.get_array_of_samples()))
+            tmp = np.zeros(32000)
+            s = scale * np.array(sound.get_array_of_samples())
+            if s.shape[0] < 32000:
+                tmp[0:s.shape[0]] = s
+            else:
+                tmp = s[:32000]
+            pure_sound.append(tmp.tolist())
 
 
             cls.append(self.sounds[i][2])

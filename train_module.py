@@ -2,6 +2,7 @@ from datetime import datetime
 import tensorflow as tf
 import sys
 import os
+import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
 DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
@@ -12,7 +13,7 @@ import os
 
 # Initialize model
 model = AudioNet_1D(32000, 4)
-beta = 1E-8
+beta = 1E-4
 gamma = 1E-10
 learning_rate = 1E-5
 
@@ -29,15 +30,16 @@ checkpoint_path = os.path.join(DIR, "DataHack", "nets")
 checkpoint_path = os.path.join(DIR, "DataHack", "nets")
 train_path = os.path.join(DIR, "..", "dataset", "train")
 val_path = os.path.join(DIR, "..", "dataset", "val")
-train_path = os.path.join(DIR, "..", "dataset", "val")
+# train_path = os.path.join(DIR, "..", "dataset", "train_small")
+# train_path = os.path.join(DIR, "..", "dataset", "val")
 
 ensure_dir(filewriter_path)
 ensure_dir(checkpoint_path)
 ensure_dir(train_path)
 
-
-num_epochs = 100
-batch_size = 5
+num_epochs = 1000
+batch_size = 200
+batch_size_val = 100
 window_size = 1 * sample_rate
 # Get the number of training/validation steps per epoch
 val_batches_per_epoch = 50
@@ -139,30 +141,43 @@ with tf.Session() as sess:
             # Get a batch of images and labels
             batch_xs, batch_clean, batch_ys = train_generator.generate_next_set(batch_size, window_size)
             # And run the training op
-            out, train_summ = sess.run([train_op, merged_summary_train], feed_dict={x: batch_xs,
-                                                                                    y: batch_ys,
-                                                                                    w: batch_clean,
-                                                                                    keep_prob: dropout_rate
-                                                                                    })
+            try:
+                out, train_summ = sess.run([train_op, merged_summary_train], feed_dict={x: batch_xs,
+                                                                                        y: batch_ys,
+                                                                                        w: batch_clean,
+                                                                                        keep_prob: dropout_rate
+                                                                                        })
+            except:
+                print('step failed')
+                continue
             writer.add_summary(train_summ, epoch * train_batches_per_epoch + step)
 
             # Generate summary with the current batch of data and write to file
             if step % display_step == 0:
-                batch_tx, batch_tclean, batch_ty = val_generator.generate_next_set(batch_size, window_size)
-                merged_summary_res = sess.run(merged_summary, feed_dict={x: batch_tx,
+                batch_tx, batch_tclean, batch_ty = val_generator.generate_next_set(batch_size_val, window_size)
+                merged_summary_res, res = sess.run([merged_summary, model.net_cls], feed_dict={x: batch_tx,
                                                     y: batch_ty,
                                                     w: batch_tclean,
                                                     keep_prob: dropout_rate
                                                     })
                 writer.add_summary(merged_summary_res, epoch * train_batches_per_epoch + step)
                 test_count += 1
+                print("generated")
+                print(np.argmax(res, 1)[0:10])
+                print("should be")
+                print(np.argmax(batch_ty, 1)[0:10])
+
+                print("values")
+                print(np.max(res, 1)[0:10])
+                print("correct")
+                print(np.sum(np.equal(np.argmax(res, 1), np.argmax(batch_ty, 1))))
 
             step += 1
 
         print("{} Saving checkpoint of model...".format(datetime.now()))
 
         # save checkpoint of the model
-        checkpoint_name = os.path.join(checkpoint_path, 'fix_epoch_' + str(epoch + 1) + '.ckpt')
+        checkpoint_name = os.path.join(checkpoint_path, 'fixs3best500_epoch_' + str(epoch + 1) + '.ckpt')
         save_path = saver.save(sess, checkpoint_name)
 
         print("{} Model checkpoint saved at {}".format(datetime.now(), checkpoint_name))
