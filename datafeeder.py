@@ -74,15 +74,16 @@ class Feeder():
 class DataFeeder():
     def __init__(self, datafolder):
         self.index = 0
-        self.feeder = Feeder(datafolder)
+        # self.feeder = Feeder(datafolder)
 
     def generate_next_set(self, batch_size, window_lengh):
-        return self.feeder.next(batch_size, window_lengh)
+        return self.generate_next_set_dummy(batch_size, window_lengh)
+        # return self.feeder.next(batch_size, window_lengh)
 
     def generate_next_set_dummy(self, batch_size, window_lenght):
-        merged_sounds = np.zeros((batch_size, window_lenght, 1))
-        pure_sound = np.zeros((batch_size, window_lenght, 1))
-        cls = np.zeros((batch_size, 2))
+        merged_sounds = np.zeros((batch_size, window_lenght))
+        pure_sound = np.zeros((batch_size, window_lenght))
+        cls = np.zeros((batch_size, 4))
         return merged_sounds, pure_sound, cls
 
 
