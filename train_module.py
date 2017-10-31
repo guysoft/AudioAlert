@@ -16,8 +16,12 @@ import os
 
 # Initialize model
 sample_rate = 40000
+# sample_rate = 32000
+window_size = 1 * sample_rate
+
 model = AudioNet_1D(40000, 2)
-beta = 1E-4
+# model = AudioNet_1D(window_size, 4)
+beta = 1E-5
 gamma = 1E-10
 learning_rate = 1E-5
 
@@ -43,12 +47,11 @@ ensure_dir(checkpoint_path)
 ensure_dir(train_path)
 
 num_epochs = 1000
-batch_size = 20
+batch_size = 10
 batch_size_val = 20
-window_size = 1 * sample_rate
 # Get the number of training/validation steps per epoch
-val_batches_per_epoch = 50
-train_batches_per_epoch = 50
+val_batches_per_epoch = 100
+train_batches_per_epoch = 100
 display_step = 20
 # List of trainable variables of the layers we want to train
 var_list = tf.trainable_variables()
@@ -97,7 +100,7 @@ tf.summary.scalar('accuracy', accuracy)
 tf.summary.scalar('clean_loss', clean_loss)
 
 au_train_summery = tf.summary.audio("train", model.in_sound, sample_rate, 10)
-au_clean_summery = tf.summary.audio("clean", model.in_sound, sample_rate, 10)
+au_clean_summery = tf.summary.audio("clean", model.in_sound_target, sample_rate, 10)
 # au_pred_summery = tf.summary.audio("predicted", model.net_splt, sample_rate, 3)
 
 # Merge all summaries together
@@ -127,6 +130,7 @@ val_generator = DataFeeder(val_path)
 with tf.Session() as sess:
     # Initialize all variables
     sess.run(tf.global_variables_initializer())
+    saver.restore(sess, r'C:\Projects\DataHack\AudioAlarm\AudioAlert\DataHack\nets\go_best500_epoch_4.ckpt')
     # Add the model graph to TensorBoard
     writer.add_graph(sess.graph)
     print("{} Start training...".format(datetime.now()))

@@ -61,14 +61,14 @@ class DataFeeder():
         d2 = d2 / max(np.abs(d2))
 
         weight = random.uniform(0.2, 1)
-        out_vec[start1:min(start1 + len(d1), int(length_sec * rate))] += weight * d1[0:min(len(d1),
-                                                                                           length_sec * rate - start1)]
-        single_in = out_vec.copy()
-        out_vec[start2:min(start2 + len(d2), int(length_sec * rate))] += (1 - weight) * d2[0:min(len(d2),
+        out_vec[start1:min(start1 + len(d1), int(length_sec * rate))] += d1[0:min(len(d1),
+                                                                                  length_sec * rate - start1)]
+        mix_in = weight * out_vec.copy()
+        mix_in[start2:min(start2 + len(d2), int(length_sec * rate))] += (1 - weight) * d2[0:min(len(d2),
                                                                                                  int(
                                                                                                      length_sec * rate) - start2)]
 
-        return single_in, out_vec
+        return out_vec, mix_in
 
     @staticmethod
     def correct_file_name(a):

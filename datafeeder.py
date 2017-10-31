@@ -1,12 +1,13 @@
-import numpy as np
-import os
 import glob
-from pydub import AudioSegment
+import os
 import random
+
+import numpy as np
 from joblib import Parallel, delayed
+from pydub import AudioSegment
+
 
 class Feeder():
-
     def get_new_item(self, wav_path):
         negative_file = os.path.join(self.negative_folder, random.choice(self.negative_folder_list))
         item = [negative_file, wav_path, [os.path.basename(os.path.dirname(wav_path))]]
@@ -23,7 +24,8 @@ class Feeder():
         for class_folder in glob.glob(os.path.join(self.sounds_folder, "*")):
             print(class_folder)
             self.sounds += Parallel(n_jobs=16, backend="threading")(delayed(self.get_new_item)(wav_path)
-                                                                    for wav_path in glob.glob(os.path.join(class_folder, "*.wav")))
+                                                                    for wav_path in
+                                                                    glob.glob(os.path.join(class_folder, "*.wav")))
 
             # old code without joblib
             # for wav_path in glob.glob(os.path.join(class_folder, "*.wav")):
@@ -42,9 +44,10 @@ class Feeder():
             sound = AudioSegment.from_file(wav_path)
 
             negative_sound = AudioSegment.from_file(negative_file)[:] - (60 - 60 * random.uniform(0.1, 1))
-            scale = 1 + random.uniform(-0.3, 0.3)
-            merge_sound = scale * np.array(
+            scale = random.uniform(0.3, 1)
+            merge_sound = np.array(
                 sound.overlay(negative_sound, times=1 + random.uniform(-0.3, 0.3)).get_array_of_samples())
+            merge_sound = scale * merge_sound / max(abs(merge_sound))
 
             tmp = np.zeros(32000)
             if merge_sound.shape[0] < 32000:
@@ -54,31 +57,30 @@ class Feeder():
             merged_sounds.append(tmp.tolist())
 
             tmp = np.zeros(32000)
-            s = scale * np.array(sound.get_array_of_samples())
+            s = np.array(sound.get_array_of_samples())
+            s = scale * s / max(abs(s))
             if s.shape[0] < 32000:
                 tmp[0:s.shape[0]] = s
             else:
                 tmp = s[:32000]
             pure_sound.append(tmp.tolist())
 
-
             cls.append(self.sounds[i][2])
         x = np.zeros((batch_size, len(self.classes_set)))
         for n in range(batch_size):
             x[n, self.classes_set.index(cls[n][0])] = 1
 
-
-
         return np.array(merged_sounds), np.array(pure_sound), x
+
 
 class DataFeeder():
     def __init__(self, datafolder):
         self.index = 0
-        # self.feeder = Feeder(datafolder)
+        self.feeder = Feeder(datafolder)
 
     def generate_next_set(self, batch_size, window_lengh):
-        return self.generate_next_set_dummy(batch_size, window_lengh)
-        # return self.feeder.next(batch_size, window_lengh)
+        # return self.generate_next_set_dummy(batch_size, window_lengh)
+        return self.feeder.next(batch_size, window_lengh)
 
     def generate_next_set_dummy(self, batch_size, window_lenght):
         merged_sounds = np.zeros((batch_size, window_lenght))
@@ -87,9 +89,9 @@ class DataFeeder():
         return merged_sounds, pure_sound, cls
 
 
-
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(add_help=True,
                                      description="Testing data feeder")
 
@@ -98,6 +100,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     a = Feeder(args.in_folder)
 
-    print(a.next( 2, 23))
-
-
+    print(a.next(2, 23))
