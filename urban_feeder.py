@@ -49,6 +49,8 @@ class DataFeeder():
         start2 = int(length_sec * rate * random.uniform(0, 0.5))
         s1.set_frame_rate(rate1)
         s2.set_frame_rate(rate2)
+        s1.set_channels(1)
+        s2.set_channels(1)
         n = np.random.choice(range(len(a[1])))
         m = np.random.choice(range(len(b[1])))
         d1 = np.array(

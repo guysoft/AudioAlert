@@ -1,8 +1,10 @@
 import tensorflow as tf
-
+import numpy as np
 
 class AudioNet_1D:
-    def __init__(self, lenght, class_num=2):
+    def __init__(self, lenght, class_num=2, sess=tf.Session()):
+        # Initialize an saver for store model checkpoints
+        self.sess = sess
         self.in_sound = tf.placeholder(tf.float32, [None, lenght], name="pure_in_sound")
         self.in_sound_target = tf.placeholder(tf.float32, [None, lenght])
         self.class_type = tf.placeholder(tf.float32, [None, 2])
@@ -50,6 +52,17 @@ class AudioNet_1D:
         self.net_cls = tf.nn.softmax(net_cls, name="prob")
         # self.net_splt = net_splt
         self.net_splt = self.in_sound
+        self.saver = tf.train.Saver()
+
+    def eval_tensor(self, tensor, dict):
+        res = self.sess.run(tensor, feed_dict=dict)
+
+    def eval_track(self, x):
+        return self.sess.run(self.net_cls, feed_dict={self.in_sound: np.expand_dims(x, axis=0),
+                                                      self.keep_prob: 1.0})
+
+    def load_model(self, path):
+        self.saver.restore(self.sess, path)
 
     @staticmethod
     def resblock(x, filter_width, num_filters, stride, name,
@@ -108,10 +121,10 @@ class AudioNet_1D:
              padding='SAME', groups=1, is_relu=True, regularizer=None):
         if is_relu:
             act = tf.layers.conv1d(x, num_filters, filter_width, stride, padding, activation=tf.nn.relu,
-                                   kernel_regularizer=regularizer, name=name)
+                                   kernel_regularizer=regularizer, bias_regularizer=regularizer, name=name)
         else:
             act = tf.layers.conv1d(x, num_filters, filter_width, stride, padding, activation=None,
-                                   kernel_regularizer=regularizer, name=name)
+                                   kernel_regularizer=regularizer, bias_regularizer=regularizer, name=name)
         return act
 
     @staticmethod

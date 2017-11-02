@@ -19,10 +19,10 @@ sample_rate = 40000
 # sample_rate = 32000
 window_size = 1 * sample_rate
 
-model = AudioNet_1D(40000, 2)
+model = AudioNet_1D(40000, 2, sess=None)
 # model = AudioNet_1D(window_size, 4)
-beta = 1E-5
-gamma = 1E-10
+beta = 1E-4
+gamma = 0  # 1E-10
 learning_rate = 1E-5
 
 
@@ -47,7 +47,7 @@ ensure_dir(checkpoint_path)
 ensure_dir(train_path)
 
 num_epochs = 1000
-batch_size = 10
+batch_size = 30
 batch_size_val = 20
 # Get the number of training/validation steps per epoch
 val_batches_per_epoch = 100
@@ -65,9 +65,9 @@ keep_prob = model.keep_prob
 dropout_rate = 0.5
 # Op for calculating the loss
 with tf.name_scope("loss"):
-    clean_loss = tf.nn.l2_loss(model.in_sound_target - model.net_splt) / window_size
+    # clean_loss = tf.nn.l2_loss(model.in_sound_target - model.net_splt) / window_size
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logit, labels=y)) + beta * sum(
-        reg_losses) + gamma * clean_loss
+        reg_losses)  #+ gamma * clean_loss
 
 # Train op
 with tf.name_scope("train"):
@@ -97,7 +97,7 @@ with tf.name_scope("accuracy"):
 
 # Add the accuracy to the summary
 tf.summary.scalar('accuracy', accuracy)
-tf.summary.scalar('clean_loss', clean_loss)
+# tf.summary.scalar('clean_loss', clean_loss)
 
 au_train_summery = tf.summary.audio("train", model.in_sound, sample_rate, 10)
 au_clean_summery = tf.summary.audio("clean", model.in_sound_target, sample_rate, 10)
@@ -107,8 +107,8 @@ au_clean_summery = tf.summary.audio("clean", model.in_sound_target, sample_rate,
 merged_summary = tf.summary.merge_all()
 
 accuracy_train = tf.summary.scalar('accuracy_train', accuracy)
-clean_loss_train = tf.summary.scalar('clean_loss_train', clean_loss)
-merged_summary_train = tf.summary.merge([accuracy_train, clean_loss_train])
+# clean_loss_train = tf.summary.scalar('clean_loss_train', clean_loss)
+merged_summary_train = tf.summary.merge([accuracy_train])  #, clean_loss_train])
 
 # Add the accuracy to the summary
 val_acc = tf.summary.scalar('Validation Accuracy', accuracy)
@@ -130,7 +130,7 @@ val_generator = DataFeeder(val_path)
 with tf.Session() as sess:
     # Initialize all variables
     sess.run(tf.global_variables_initializer())
-    saver.restore(sess, r'C:\Projects\DataHack\AudioAlarm\AudioAlert\DataHack\nets\go_best500_epoch_4.ckpt')
+    # saver.restore(sess, r'C:\Projects\DataHack\AudioAlarm\AudioAlert\DataHack\nets\go_best500_epoch_4.ckpt')
     # Add the model graph to TensorBoard
     writer.add_graph(sess.graph)
     print("{} Start training...".format(datetime.now()))
@@ -193,7 +193,7 @@ with tf.Session() as sess:
         print("{} Saving checkpoint of model...".format(datetime.now()))
 
         # save checkpoint of the model
-        checkpoint_name = os.path.join(checkpoint_path, 'go_best500_epoch_' + str(epoch + 1) + '.ckpt')
+        checkpoint_name = os.path.join(checkpoint_path, 'go_1101_epoch_' + str(epoch + 1) + '.ckpt')
         save_path = saver.save(sess, checkpoint_name)
 
         print("{} Model checkpoint saved at {}".format(datetime.now(), checkpoint_name))
