@@ -124,13 +124,7 @@ class DataFeeder():
             merged_sounds += [merged_sounds_tmp]
             cls.append([1, 0])
 
-        return merged_sounds, pure_sound, cls
-
-    def generate_next_set_dummy(self, batch_size, window_lenght):
-        merged_sounds = np.zeros((batch_size, window_lenght, 1))
-        pure_sound = np.zeros((batch_size, window_lenght, 1))
-        cls = np.zeros((batch_size, 2))
-        return merged_sounds, pure_sound, cls
+        return merged_sounds, cls
 
 
 if __name__ == "__main__":

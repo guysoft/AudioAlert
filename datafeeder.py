@@ -70,7 +70,7 @@ class Feeder():
         for n in range(batch_size):
             x[n, self.classes_set.index(cls[n][0])] = 1
 
-        return np.array(merged_sounds), np.array(pure_sound), x
+        return np.array(merged_sounds), x
 
 
 class DataFeeder():

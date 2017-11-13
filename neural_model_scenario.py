@@ -43,7 +43,7 @@ class AudioNet_1D:
             net_cls = AudioNet_1D.conv(net_cls, 9, 32, 1, "cls_layer2", regularizer=self.regularizer, padding="valid")
             net_cls = AudioNet_1D.conv(net_cls, 50, class_num, 1, "cls_layer3", regularizer=self.regularizer,
                                        padding="valid")
-            net_cls = tf.reduce_max(net_cls, 1)
+            net_cls = tf.reduce_mean(net_cls, 1)
 
         self.net_cls_logit = net_cls
         self.net_cls = tf.nn.softmax(net_cls, name="prob")
